@@ -20,4 +20,6 @@ for i in range(1, len(rows)):
     values = [td.text.replace('\n', '') for td in tds]
 
     df = df.append(pd.Series(values, index=columns), ignore_index=True)
+    todelete = ['SEC filings', 'Date first added', 'CIK']
+    df = df.drop(todelete, axis=1)
     df.to_csv('companylist.csv', index=False)
