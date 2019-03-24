@@ -1,18 +1,23 @@
-import bs4 as bs
+from bs4 import BeautifulSoup
 import requests
+import pandas as pd
 
-def save_sp500_tickers():
-    resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
-    soup = bs.BeautifulSoup(resp.text, 'lxml')
-    table = soup.find('table', {'class': 'wikitable sortable'})
-    tickers = []
-    for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[0,1,3,4,5].text
-        tickers.append(ticker)
-        
-    with open("sp500tickers.csv","wb") as f:
-        f.write(tickers)
-        
-    return tickers
+URL = 'https://en.wikipedia.org/wiki/List_of_S%26P_500_companies'
+response = requests.get(URL)
+soup = BeautifulSoup(response.text, 'html.parser')
 
-save_sp500_tickers()
+table = soup.find('table', {'class':'wikitable sortable'}).tbody
+
+rows = table.find_all('tr')
+
+columns = [v.text.replace('\n', '') for v in rows[0].find_all('th')]
+
+df = pd.DataFrame(columns=columns)
+
+for i in range(1, len(rows)):
+    tds = rows[i].find_all('td')
+
+    values = [td.text.replace('\n', '') for td in tds]
+
+    df = df.append(pd.Series(values, index=columns), ignore_index=True)
+    df.to_csv('companylist.csv', index=False)
